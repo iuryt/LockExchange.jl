@@ -3,7 +3,7 @@ using Oceananigans
 using Oceananigans.Units
 
 
-L = 10meters
+L = 20meters
 H = 4meters
 
 Ny = Int(2*L/0.1) # number of points in y
@@ -32,3 +32,11 @@ simulation.output_writers[:temperature] =
 run!(simulation)
 
 T = FieldTimeSeries("../data/lockexchange.jld2", "T")
+x,y,z = nodes(T)
+
+
+anim = @animate for (i, t) in enumerate(T.times)
+    contourf(T[1,:,:,i]')
+end
+
+mp4(anim, "../img/animation.mp4", fps = 2)
