@@ -1,5 +1,6 @@
 # Importing packages
 using Plots
+pyplot() #add pyplot from python
 using Oceananigans 
 using Oceananigans.Units 
 
@@ -17,28 +18,31 @@ grid = RectilinearGrid( #creating grid
     topology=(Flat, Bounded, Bounded) # Solving for y and z where we define as "Bounded". "Flat" will not be solved.
 )
 
-closure = SmagorinskyLilly()
+closure = SmagorinskyLilly() #Choosing turbulence closure
 
-model = NonhydrostaticModel(grid=grid, closure=closure, buoyancy=SeawaterBuoyancy(), tracers=(:T, :S))
+model = NonhydrostaticModel(grid=grid, closure=closure, buoyancy=SeawaterBuoyancy(), tracers=(:T, :S)) # Setting the model configuration
 
 initial_temperature(x, y, z) = 20 + 0.5*y/abs(y)
-set!(model, T=initial_temperature, S=35)
+set!(model, T=initial_temperature, S=35) # Adding initial conditions to the model setting
 
-simulation = Simulation(model, Δt = 0.1seconds, stop_time = 10minutes)
+simulation = Simulation(model, Δt = 0.025seconds, stop_time = 10minutes) #Creating the simulation
 
-simulation.output_writers[:temperature] = JLD2OutputWriter(
+#Setting the format, frequency and path of the output file
+simulation.output_writers[:temperature] = JLD2OutputWriter( 
                     model, model.tracers, prefix = "../data/lockexchange",
-                    schedule=TimeInterval(1second), force = true
+                    schedule=TimeInterval(30second), force = true
 )
 
 run!(simulation)
 
-T = FieldTimeSeries("../data/lockexchange.jld2", "T")
-x,y,z = nodes(T)
+####################################################################################################
+T = FieldTimeSeries("../data/lockexchange.jld2", "T") # Reading the output file
+x,y,z = nodes(T) #Extracting the grid
 
-
+#Creating the animation
 anim = @animate for (i, t) in enumerate(T.times)
-    contour(y,z,T[1,:,:,i]'; xlabel="y [m]", ylabel="z [m]", levels=18.5:0.1:21.5, fill=true, linewidth=0.2)
+    contour(y,z,T[1,:,:,i]'; xlabel="y [m]", ylabel="z [m]",clim=(19,20.5),c=cgrad(:dense,rev=true), levels=18.9:0.1:20.5, fill=true, linewidth=0.0)
 end
 
-mp4(anim, "../img/animation.mp4", fps = 2)
+#Saving the animation as a GIF
+gif(anim, "../img/animation.gif", fps = 9)
