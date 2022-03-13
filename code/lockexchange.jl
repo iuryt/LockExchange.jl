@@ -1,19 +1,20 @@
+# Importing packages
 using Plots
-using Oceananigans
-using Oceananigans.Units
+using Oceananigans 
+using Oceananigans.Units 
 
 
-L = 20meters
-H = 4meters
+L = 20meters #Length in meters (thus x1)
+H = 4meters #Total depth
 
 Ny = Int(2*L/0.1meters) # number of points in y
 Nz = Int(H/0.1meters) # number of points in z
 
-grid = RectilinearGrid(
+grid = RectilinearGrid( #creating grid
     size=(Ny, Nz), 
-    y=(-L*meters, L*meters), 
+    y=(-L*meters, L*meters),
     z=(-H*meters,0),
-    topology=(Flat, Bounded, Bounded)
+    topology=(Flat, Bounded, Bounded) # Solving for y and z where we define as "Bounded". "Flat" will not be solved.
 )
 
 closure = SmagorinskyLilly()
@@ -27,7 +28,7 @@ simulation = Simulation(model, Δt = 0.1seconds, stop_time = 10minutes)
 
 simulation.output_writers[:temperature] = JLD2OutputWriter(
                     model, model.tracers, prefix = "../data/lockexchange",
-                    schedule=TimeInterval(1minute), force = true
+                    schedule=TimeInterval(1second), force = true
 )
 
 run!(simulation)
